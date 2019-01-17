@@ -14,5 +14,5 @@ puts perform
 
 file = File.open("bitcoins.txt","w+")
 fichier = file
-final_array.map { |k| fichier.write("#{k.keys[0]}\t\t#{k.values[0]}\n")}
+perform.map { |k| fichier.write("#{k.keys[0]}\t\t#{k.values[0]}\n")}
 file.close

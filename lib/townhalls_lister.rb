@@ -2,16 +2,6 @@ require "nokogiri"
 require "open-uri"
 require "pry"
 
-
-def get_townhall_email(url)
-	begin
-      page =  Nokogiri::HTML(open("http://www.annuaire-des-mairies.com/"+url))
-	return page.css("/html/body/div/main/section[2]/div/table/tbody/tr[4]/td[2]").text
-	rescue OpenURI::HTTPError
-      puts "HTML ERROR"
-	end
-end
-
 def liste_dpts(page)
 	liste_dpts = page.css("//tbody//tr//td//a[@class='lientxt']/@href").to_a
 	liste_dpts.map! {|k| k.text}
@@ -34,15 +24,20 @@ def get_townhall_urls(liste_dpts,page)
 			nbpages += 1
 		end
 	end
-	return [liste_noms,liste_cmmnes]
+	return liste_cmmnes
 end
 
-def scrapping_master_function(arraydarrays)
+def scrapping_master_function(liste_cmmnes)
 	email_array = []
-	arraydarrays[1].map do |k|
-	email_array << get_townhall_email(k)
+	liste_cmmnes.map do |k|
+		begin
+				page =  Nokogiri::HTML(open("http://www.annuaire-des-mairies.com/"+k))
+				email_array << page.css("/html/body/div/main/section[2]/div/table/tbody/tr[4]/td[2]").text
+		rescue StandardError, OpenURI::HTTPError
+				puts "ERROR"
+		end
 	end
-	return [arraydarrays[0], email_array].transpose.map {|k| [k].to_h}
+	return [liste_cmmnes, email_array].transpose.map {|k| [k].to_h}
 end
 
 def perform
@@ -54,11 +49,6 @@ def perform_valdoiseversion
 	page = Nokogiri::HTML(open("http://www.annuaire-des-mairies.com/"))
 	return scrapping_master_function(get_townhall_urls(["val-d-oise.html"],page))
 end
-
-file = File.open("e-mairies","w+")
-fichier = file
-perform.map { |k| fichier.write("#{k.keys[0]}\t\t#{k.values[0]}\n")}
-file.close
 
 puts perform_valdoiseversion
 
